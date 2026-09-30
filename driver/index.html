@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<title>Driver Portal</title>
+
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#101c14">
+
+<!-- iOS: Safari ignores most of manifest.json for "Add to Home Screen", so these do the same job there -->
+<link rel="apple-touch-icon" href="../icons/driver-180.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Driver Portal">
+
+<style>
+  :root { color-scheme: dark; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; height: 100%; background: #101c14; overflow: hidden; }
+  iframe { position: fixed; inset: 0; width: 100%; height: 100%; border: 0; background: #101c14; }
+
+  #loading, #offline {
+    position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center;
+    background: #101c14; color: #f2efe6; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    text-align: center; padding: 24px; z-index: 5;
+  }
+  #offline { display: none; }
+  .mark { width: 56px; height: 56px; border-radius: 14px; background: #e8a93b; color: #23180a;
+    display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 20px; margin-bottom: 14px; }
+  .spinner { width: 28px; height: 28px; border: 3px solid #2b3f30; border-top-color: #e8a93b; border-radius: 50%;
+    animation: spin 0.8s linear infinite; margin-top: 10px; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  h2 { margin: 0 0 4px; font-size: 17px; }
+  p { margin: 0; color: #9aae9c; font-size: 13px; max-width: 280px; }
+  button { margin-top: 16px; padding: 10px 22px; border-radius: 8px; border: none;
+    background: #e8a93b; color: #23180a; font-weight: 700; font-size: 14px; }
+</style>
+</head>
+<body>
+
+  <div id="loading">
+    <div class="mark">DP</div>
+    <h2>Driver Portal</h2>
+    <div class="spinner"></div>
+  </div>
+
+  <div id="offline">
+    <div class="mark">DP</div>
+    <h2>You're offline</h2>
+    <p>The Driver Portal needs an internet connection to load your trips. Reconnect and try again.</p>
+    <button onclick="boot()">Retry</button>
+  </div>
+
+  <iframe id="app" title="Driver Portal" hidden></iframe>
+
+  <script src="../config.js"></script>
+  <script>
+    var frame = document.getElementById('app');
+    var loading = document.getElementById('loading');
+    var offline = document.getElementById('offline');
+    var loadTimeout;
+
+    function showOffline() {
+      clearTimeout(loadTimeout);
+      loading.style.display = 'none';
+      offline.style.display = 'flex';
+      frame.hidden = true;
+    }
+
+    function boot() {
+      if (!navigator.onLine) { showOffline(); return; }
+      offline.style.display = 'none';
+      loading.style.display = 'flex';
+      frame.hidden = true;
+      frame.src = APP_URL + (APP_URL.indexOf('?') > -1 ? '&' : '?') + 'v=' + Date.now();
+      // If it hasn't loaded in 20s, assume a connectivity problem rather than spinning forever.
+      clearTimeout(loadTimeout);
+      loadTimeout = setTimeout(showOffline, 20000);
+    }
+
+    frame.addEventListener('load', function () {
+      clearTimeout(loadTimeout);
+      loading.style.display = 'none';
+      offline.style.display = 'none';
+      frame.hidden = false;
+    });
+
+    window.addEventListener('online', boot);
+    window.addEventListener('offline', showOffline);
+
+    boot();
+
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('../sw.js', { scope: '../' }).catch(function () {});
+    }
+  </script>
+</body>
+</html>
