@@ -8,4 +8,4 @@
  * need to update it in one place (and again any time you create a new
  * deployment, since Apps Script gives each deployment its own /exec URL).
  */
-const APP_URL = "https://script.google.com/macros/s/REPLACE_WITH_YOUR_DEPLOYMENT_ID/exec";
+const APP_URL = "https://script.google.com/macros/s/AKfycbzm8pr39tuFbMvMpZSbZjpTCNxSB6XRGnRcHseOsvQLlyNBLeDcOmGjuYp_zVaGAZ5UfQ/exec";
